@@ -5,7 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import org.antlr.v4.runtime.misc.NotNull;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,12 +26,10 @@ public class SessionTimerInterceptor implements HandlerInterceptor {
 
         private static final Logger log = LoggerFactory.getLogger(SessionTimerInterceptor.class);
 
-        private static final long MAX_INACTIVE_SESSION_TIME = 5 * 10000;
-        private SecurityConTextResolver securityConTextResolver;
-        @Autowired
-        private HttpSession session;
+        private static final long MAX_INACTIVE_SESSION_TIME = 60 * 60 * 10000;
+        private final SecurityConTextResolver securityConTextResolver = new SecurityConTextResolver();
 
-        /**
+    /**
          * Executed before actual handler is executed
          **/
         @Override
@@ -41,10 +39,11 @@ public class SessionTimerInterceptor implements HandlerInterceptor {
             long startTime = System.currentTimeMillis();
             request.setAttribute("executionTime", startTime);
             if (UserInterceptor.isUserLogged()) {
-                session = request.getSession();
+                HttpSession session = request.getSession();
+                session.setMaxInactiveInterval(60 * 60 * 1000);
                 log.info("Time since last request in this session: {} ms", System.currentTimeMillis() - request.getSession()
                         .getLastAccessedTime());
-                if (System.currentTimeMillis() - session.getLastAccessedTime() > MAX_INACTIVE_SESSION_TIME) {
+                if (session.getMaxInactiveInterval() > MAX_INACTIVE_SESSION_TIME) {
                     log.warn("Logging out, due to inactive session");
                     SecurityContextHolder.clearContext();
                     request.logout();
@@ -66,8 +65,7 @@ public class SessionTimerInterceptor implements HandlerInterceptor {
             log.info("Execution time for handling the request was: {} ms", System.currentTimeMillis() - startTime);
             if (UserInterceptor.isUserLogged()) {
                 if (request.getRequestURI().equals("/")){
-                     securityConTextResolver = new SecurityConTextResolver();
-                     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
                     securityConTextResolver.setSecurityContextHolderStrategy(auth,request, response);
                     log.info("Authentication and contextHolder set and repository saved: {}", securityConTextResolver);
                 }

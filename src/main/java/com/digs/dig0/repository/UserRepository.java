@@ -1,5 +1,6 @@
 package com.digs.dig0.repository;
 
+import com.digs.dig0.model.Event;
 import com.digs.dig0.model.User;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -26,4 +27,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query(value = "UPDATE User u set u.username =:username,"+
             " u.name =:name," + "u.phn =:phn where u.id =:id")
     void update(String username, String name, String phn, Long id);
+
+    User findByName(String name);
+
 }

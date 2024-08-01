@@ -1,12 +1,34 @@
 package com.digs.dig0.controller;
 
-import com.digs.dig0.service.UserService;
+import com.digs.dig0.dto.LoginDTO;
+import com.digs.dig0.dto.ResponseFile;
+import com.digs.dig0.model.MyUserDetails;
+import com.digs.dig0.model.User;
+import com.digs.dig0.service.ImageService;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.SessionCookieConfig;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.digs.dig0.utils.Constants.*;
 
 /**
  * Copyright to Digs LLC
@@ -18,14 +40,32 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequiredArgsConstructor
 public class HomeController {
     private static final Logger log = LoggerFactory.getLogger(HomeController.class);
-    private final UserService userService;
+    private final ImageService imageService;
+    private final AuthenticationManager authenticationManager;
 
     // handler method to handle home page request
     @GetMapping
-    public String homePage() {
+    public String homePage(Model model, HttpServletRequest request,
+                           @AuthenticationPrincipal User user) {
+        String username = request.getParameter(USERNAME);
+        ServletContext sc = request.getServletContext();
+        String servletContextname = sc.getServletContextName();
+        SessionCookieConfig sessionCookieConfig = sc.getSessionCookieConfig();
+        Integer sessionTimeoutNumber = sc.getSessionTimeout();
+        String vrServername = sc.getVirtualServerName();
+        log.info("**************************************************************************");
+        log.info("servletContextname is: {}", servletContextname);
+        log.info("sessionTimeout Nmmber  is: {}", sessionTimeoutNumber);
+        log.info("servletContext is: {}", sc);
+        log.info("vrServername is: {}", vrServername);
+        log.info("sessionCookieConfig is: {}", sessionCookieConfig);
+        log.info("event_organizer is: {}", user);
+        log.info("**************************************************************************");
+        model.addAttribute(USERNAME, username);
+        model.addAttribute("event_organizer", user);
+        model.addAttribute("user", user);
         return "home";
     }
-
 
     @GetMapping("/login")
     public String login() {
@@ -35,12 +75,6 @@ public class HomeController {
     @GetMapping("/error")
     public String error(){
         return "error";
-    }
-
-    @GetMapping(value = "/user")
-    public String user() {
-        log.info("USER Dashboard: ...attempting logging..  ..");
-        return "user";
     }
 
     @GetMapping(value = "/about")
@@ -91,25 +125,20 @@ public class HomeController {
         return "pricing";
     }
 
-    @GetMapping(value = "/event")
-    public String event() {
-        log.info("Event Dashboard: ...attempting logging..  ..");
-        return "event";
-    }
+    @PostMapping("login")
+    public ResponseEntity<Void> login(@RequestBody LoginDTO requestDto) {
+        try {
+            String username = requestDto.getUsername();
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(username, requestDto.getPassword())
+            );
+            MyUserDetails authenticatedUser = (MyUserDetails) authentication.getPrincipal();
 
-/*    // Login form with error
-    @RequestMapping("/login-error.html")
-    public String loginError(Model model) {
-        model.addAttribute("loginError", true);
-        return "login.html";
-    }
+            //createAndAddCookies( request, response, authenticatedUser.getUsername(), authenticatedUser.getAuthorities() );
 
-    @ExceptionHandler(Throwable.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public String exception(final Throwable throwable, final Model model) {
-        log.error("Exception during execution of SpringSecurity application", throwable);
-        String errorMessage = (throwable != null ? throwable.getMessage() : "Unknown error");
-        model.addAttribute("errorMessage", errorMessage);
-        return "error";
-    }*/
+            return ResponseEntity.noContent().build();
+        } catch (AuthenticationException e) {
+            throw new BadCredentialsException("Invalid Credentials");
+        }
+    }
 }

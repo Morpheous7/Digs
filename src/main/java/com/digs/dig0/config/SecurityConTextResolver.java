@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Component
 public class SecurityConTextResolver implements SecurityContext{
-     private Authentication authentication;
+    private Authentication authentication;
     private final SecurityContextHolderStrategy securityContextHolderStrategy = SecurityContextHolder.getContextHolderStrategy();
     private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
     /**

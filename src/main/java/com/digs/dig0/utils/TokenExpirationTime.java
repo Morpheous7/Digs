@@ -13,12 +13,12 @@ import java.util.Date;
 
 
 public class TokenExpirationTime {
-    private static final int EXPIRATION_TIME = 10*60*1000;
+    private static final int EXPIRATION_TIME = 24 * 60 * 60;
 
     public static Date getExpirationTime(){
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(new Date().getTime());
-        calendar.add(Calendar.HOUR, EXPIRATION_TIME);
+        calendar.add(Calendar.MINUTE, EXPIRATION_TIME);
         return new Date(calendar.getTime().getTime());
     }
 }

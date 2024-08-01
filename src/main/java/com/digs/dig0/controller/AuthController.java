@@ -1,21 +1,34 @@
 package com.digs.dig0.controller;
 
+import com.digs.dig0.dto.LoginDTO;
 import com.digs.dig0.dto.RegistrationCompleteEvent;
 import com.digs.dig0.dto.UserDTO;
 import com.digs.dig0.eventListener.RegistrationCompleteEventListener;
+import com.digs.dig0.model.MyUserDetails;
 import com.digs.dig0.model.Token;
 import com.digs.dig0.model.User;
 import com.digs.dig0.password.IPasswordResetTokenService;
+import com.digs.dig0.service.JwtTokenService;
 import com.digs.dig0.service.TokenServiceImpl;
 import com.digs.dig0.service.UserService;
 import com.digs.dig0.utils.UrlUtil;
+import io.jsonwebtoken.Claims;
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +37,7 @@ import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.util.*;
 
+import static com.digs.dig0.utils.Constants.*;
 
 
 /**
@@ -41,8 +55,10 @@ public class AuthController implements Serializable {
     private final UserService userService;
     private final ApplicationEventPublisher publisher;
     private final TokenServiceImpl tokenService;
+    private final JwtTokenService jwtTokenService;
     private final IPasswordResetTokenService passwordResetTokenService;
     private final RegistrationCompleteEventListener eventListener;
+    private final AuthenticationManager authenticationManager;
 
     final Set<String> issuedRefreshTokens = Collections.synchronizedSet(new HashSet<>());
     @Value("${jwt.access-token.expires:3600000}")
@@ -56,9 +72,8 @@ public class AuthController implements Serializable {
         return "register";
     }
 
-
     @PostMapping("/registers")
-   public String registration(@ModelAttribute("user") UserDTO userDto, Model model, HttpServletRequest request) {
+    public String registration(@ModelAttribute("user") UserDTO userDto, HttpServletRequest request) {
         log.info("""
                 Registration Controller attempting to register : {}""", userDto.getName());
         User user0 = userService.register(userDto);
@@ -66,15 +81,35 @@ public class AuthController implements Serializable {
         return "redirect:/register/register?success";
     }
 
+
+
+    @PostMapping("/login")
+    public ResponseEntity<Void> login(@RequestBody LoginDTO requestDto, HttpServletRequest request,
+                                      HttpServletResponse response) {
+        try {
+            String username = requestDto.getUsername();
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(username, requestDto.getPassword())
+            );
+            MyUserDetails authenticatedUser = (MyUserDetails) authentication.getPrincipal();
+
+            createAndAddCookies( request, response, authenticatedUser.getUsername(), authenticatedUser.getAuthorities() );
+
+            return ResponseEntity.noContent().build();
+        } catch (AuthenticationException e) {
+            throw new BadCredentialsException("Invalid Credentials");
+        }
+    }
+
     @GetMapping("/verifyEmail")
-    public String verifyEmail(@RequestParam("token") String token) {
+    public String verifyEmail(@RequestParam("token") String token, HttpServletRequest request, HttpServletResponse response) {
         Optional<Token> theToken = tokenService.findByToken(token);
         if (theToken.isPresent() && theToken.get().getUser().isEnabled()) {
             return "redirect:/login?verified";
         }
         String verificationResult = tokenService.validateToken(token);
-
-        //createAndAddCookies( request, response, authenticatedUser.getUsername(), authenticatedUser.getRoleNames() );
+        User user0 = theToken.get().getUser();
+        createAndAddCookies( request, response, user0.getUsername(), user0.getAuthorities() );
 
         switch (verificationResult.toLowerCase()) {
             case "expired" -> {
@@ -135,28 +170,26 @@ public class AuthController implements Serializable {
         return "redirect:/error?not_found";
     }
 
- /*   @GetMapping("refresh")
+    @GetMapping("refresh")
     public ResponseEntity<Void> refresh(@CookieValue(value = APP_REFRESH_TOKEN) String refreshToken,
                                         HttpServletRequest request,
                                         HttpServletResponse response) {
-*//*
+
         if (issuedRefreshTokens.contains(refreshToken) && jwtTokenService.validateRefreshToken(refreshToken)) {
             issuedRefreshTokens.remove(refreshToken);
             Claims claims = jwtTokenService.getClaims(refreshToken).getPayload();
             String username = claims.getSubject();
-            List<String> rolesNames = (List<String>) claims.get(ROLES);
+            Collection<GrantedAuthority> rolesNames = (Collection<GrantedAuthority>) claims.get(ROLES);
 
             createAndAddCookies(request, response, username, rolesNames);
             return ResponseEntity.noContent().build();
         }
-*//*
+
         throw new BadCredentialsException("Invalid refresh token");
     }
 
-    private void createAndAddCookies(HttpServletRequest request,
-                                     HttpServletResponse response,
-                                     String username,
-                                     List<String> roleNames) {
+    private void createAndAddCookies(HttpServletRequest request,  HttpServletResponse response, String username,
+                                     Collection<GrantedAuthority> roleNames) {
         String accessToken = jwtTokenService.createToken(ACCESS_TOKEN_TYPE, username, roleNames, accessTokenValidityMs);
         String refreshToken = jwtTokenService.createToken(REFRESH_TOKEN_TYPE, username, roleNames, refreshTokenValidityMs);
 
@@ -180,6 +213,6 @@ public class AuthController implements Serializable {
         cookie.setSecure(secure);
         cookie.setMaxAge(expiresIn);
         return cookie;
-    }*/
+    }
 
 }

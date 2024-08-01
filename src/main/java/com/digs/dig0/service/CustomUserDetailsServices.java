@@ -10,6 +10,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import static com.digs.dig0.utils.Constants.USER_NOT_FOUND_PASSWORD;
+
 /**
  * Copyright to Digs LLC
  * @author Ike Kennedy
@@ -40,7 +42,7 @@ public class CustomUserDetailsServices implements UserDetailsService {
 
         return userRepository.findByUsername(username)
                 .map(MyUserDetails::new)
-                .orElseThrow(()-> new UsernameNotFoundException("User not found"));
+                .orElseThrow(()-> new UsernameNotFoundException(USER_NOT_FOUND_PASSWORD));
     }
 
 }

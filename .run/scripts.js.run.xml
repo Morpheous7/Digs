@@ -1,0 +1,5 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="scripts.js" type="NodeJSConfigurationType" nameIsGenerated="true" node-parameters="$Classpath$" path-to-js-file="scripts.js" working-dir="$PROJECT_DIR$/src/main/resources/static/js">
+    <method v="2" />
+  </configuration>
+</component>

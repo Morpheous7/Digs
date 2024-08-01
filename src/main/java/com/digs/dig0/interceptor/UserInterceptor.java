@@ -1,25 +1,25 @@
 package com.digs.dig0.interceptor;
 
-
-
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import org.antlr.v4.runtime.misc.NotNull;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.DefaultRedirectStrategy;
-import org.springframework.security.web.RedirectStrategy;
 import org.springframework.stereotype.Component;
-import org.springframework.ui.Model;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+import org.springframework.web.multipart.MultipartResolver;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.SmartView;
 import org.springframework.web.servlet.View;
-
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Copyright to Digs LLC
@@ -29,11 +29,8 @@ import java.io.IOException;
 @Component
 public class UserInterceptor implements HandlerInterceptor {
     private static final Logger log = LoggerFactory.getLogger(UserInterceptor.class);
-    private RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
     HttpServletRequest request;
     HttpServletResponse response;
-
-
 
     /**
      * Executed before actual handler is executed
@@ -54,7 +51,6 @@ public class UserInterceptor implements HandlerInterceptor {
         if (modelAndView != null && !isRedirectView(modelAndView)) {
             if (isUserLogged()) {
                 addToModelUserDetails(modelAndView);
-                //addToModelUserDetails((ModelAndView) object);
                 request.setAttribute(request.getRemoteUser(), modelAndView.getModel());
                 request.setAttribute("username", modelAndView.getModel());
             }
@@ -88,25 +84,6 @@ public class UserInterceptor implements HandlerInterceptor {
                 .getName();
         model.addObject("username", username);
         log.trace("session : " + model.getModel());
-        log.info("================= addToModelUserDetails ============================");
-       /* if (request.getCookies() != null) {
-            if (Arrays.stream(request.getCookies()).toList().contains("Token")) {
-                try {
-                    redirectStrategy.sendRedirect(request, response, "/user.html");
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }*/
-    }
-
-    private void addToModelUserDetails(Model model) {
-        log.info("================= addToModelUserDetails ============================");
-        String username = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getName();
-        model.addAttribute("username", username);
-        log.trace("session : " + model.getAttribute("userForm"));
         log.info("================= addToModelUserDetails ============================");
 
     }

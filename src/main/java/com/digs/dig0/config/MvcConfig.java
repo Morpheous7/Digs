@@ -7,6 +7,9 @@ import lombok.SneakyThrows;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
+import org.springframework.http.converter.ByteArrayHttpMessageConverter;
+import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.servlet.ViewResolver;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -16,6 +19,9 @@ import org.springframework.web.servlet.view.InternalResourceViewResolver;
 import org.springframework.web.servlet.view.JstlView;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
@@ -39,7 +45,7 @@ public class MvcConfig implements WebMvcConfigurer {
         registry.addViewController("/anonymous.html");
         registry.addViewController("/login").setViewName("login");
         registry.addViewController("/index").setViewName("home");
-        registry.addViewController("/user").setViewName("user");
+        registry.addViewController("/profile").setViewName("profile");
         registry.addViewController("/users").setViewName("users");
         registry.addViewController("/register").setViewName("register");
         registry.addViewController("/registers").setViewName("register");
@@ -50,6 +56,9 @@ public class MvcConfig implements WebMvcConfigurer {
         registry.addViewController("/register/register").setViewName("register");
         registry.addViewController("/register/forgot-password-request").setViewName("forgot-password-form");
         registry.addViewController("/register/password-reset-form").setViewName("password-reset-form");
+        registry.addViewController("/event_img").setViewName("event_img");
+        registry.addViewController("/flyer").setViewName("flyer");
+
         registry.addViewController("/event").setViewName("event");
         registry.addViewController("/pricing").setViewName("pricing");
         registry.addViewController("/portfolio-overview").setViewName("portfolio-overview");
@@ -94,5 +103,28 @@ public class MvcConfig implements WebMvcConfigurer {
         registry.addInterceptor(new SessionTimerInterceptor());
     }
 
+    @Override
+    public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+        converters.add(byteArrayHttpMessageConverter());
+    }
+
+    @Bean
+    public ByteArrayHttpMessageConverter byteArrayHttpMessageConverter() {
+        ByteArrayHttpMessageConverter arrayHttpMessageConverter = new ByteArrayHttpMessageConverter();
+        arrayHttpMessageConverter.setSupportedMediaTypes(getSupportedMediaTypes());
+        return arrayHttpMessageConverter;
+    }
+
+    private List<MediaType> getSupportedMediaTypes() {
+        List<MediaType> list = new ArrayList<MediaType>();
+        list.add(MediaType.IMAGE_JPEG);
+        list.add(MediaType.IMAGE_PNG);
+        list.add(MediaType.APPLICATION_OCTET_STREAM);
+        list.add(MediaType.APPLICATION_FORM_URLENCODED);
+        list.add(MediaType.APPLICATION_JSON);
+        list.add(MediaType.MULTIPART_FORM_DATA);
+        list.add(MediaType.MULTIPART_MIXED);
+        return list;
+    }
 
 }

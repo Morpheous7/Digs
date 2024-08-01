@@ -1,6 +1,8 @@
 package com.digs.dig0.service;
 import com.digs.dig0.dto.UserDTO;
+import com.digs.dig0.model.Event;
 import com.digs.dig0.model.User;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
@@ -15,7 +17,7 @@ public interface UserService  {
     List<User> getAllUsers();
     Optional<User> findByUsername(String username);
     Optional<User> save(User user);
-
+    User findByName(String name);
     Optional<User> findById(Long id);
 
     void updateUser(Long id, String username, String name, String phn);
@@ -23,4 +25,5 @@ public interface UserService  {
     void deleteUser(Long id);
 
     User register(UserDTO userDto);
+
 }

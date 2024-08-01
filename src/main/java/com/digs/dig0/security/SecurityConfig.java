@@ -1,5 +1,6 @@
 package com.digs.dig0.security;
 
+import com.digs.dig0.filter.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,12 +11,12 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.HeaderWriterLogoutHandler;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.context.DelegatingSecurityContextRepository;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.security.web.header.writers.ClearSiteDataHeaderWriter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-
 import static org.springframework.security.web.header.writers.ClearSiteDataHeaderWriter.Directive.COOKIES;
 
 
@@ -30,6 +31,8 @@ import static org.springframework.security.web.header.writers.ClearSiteDataHeade
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    private final JwtAuthFilter jwtAuthFilter;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -37,8 +40,9 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
                 .securityContext((s) -> s.securityContextRepository(new DelegatingSecurityContextRepository(
                      new RequestAttributeSecurityContextRepository(), new HttpSessionSecurityContextRepository())))
-                .authorizeHttpRequests( c -> c.requestMatchers("/", "/login", "/error", "/register/**").permitAll()
-                        .anyRequest().authenticated());
+                .addFilterBefore(jwtAuthFilter, BasicAuthenticationFilter.class)
+                .authorizeHttpRequests( c -> c.requestMatchers("/", "/login", "/register/login", "/error",
+                                "/register/**").permitAll().anyRequest().authenticated());
         http
                 .formLogin(
                         form -> form

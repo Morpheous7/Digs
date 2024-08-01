@@ -1,0 +1,39 @@
+###
+GET http://localhost:8088/login
+GET http://localhost:8088/aut/register
+Accept-Post:  http://localhost:8088/aut/login
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+
+
+<> 2024-04-24T112223.200.txt
+
+###
+POST http://localhost:8088/event/create
+Accept-Post:  http://localhost:8088/aut/login
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+###
+POST http://localhost:8088/register
+
+###
+# @no-cookie-jar
+POST http://localhost:8088/aut/register
+Accept-Post:  http://localhost:8088/aut/register
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+###
+GET http://localhost:8088/aut/register
+
+###
+GET http://localhost:8008/event
+
+###
+GET http://localhost:8008/register
+
+###
+POST http://localhost:8088/event/create
+Content-Type: application/x-www-form-urlencoded, multipart/form-data
+Accept: text/html, text/json, multipart/form-data
+
+###

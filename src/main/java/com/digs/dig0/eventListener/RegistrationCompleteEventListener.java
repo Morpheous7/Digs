@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 import java.io.UnsupportedEncodingException;
 import java.util.UUID;
 
+import static com.digs.dig0.utils.Constants.ACCESS_TOKEN_TYPE;
+
 
 /**
  * Copyright to Digs LLC
@@ -33,10 +35,13 @@ public class RegistrationCompleteEventListener implements ApplicationListener<Re
         user = event.getUser();
         //2. generate a token for the user
         String Token = UUID.randomUUID().toString();
+
         //3. save the token for the user
         tokenService.saveVerificationTokenForUser(user, Token);
-        //4. Build the verification url
+
+       //4. Build the verification url
         String url = event.getConfirmationUrl()+"/register/verifyEmail?token="+Token;
+
         //5. send the email to the user
         try {
             sendVerificationEmail(url);

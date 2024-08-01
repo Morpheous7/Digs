@@ -22,7 +22,7 @@ public class Token {
     private Long id;
     private String token;
     private Date expirationTime;
-    @OneToOne
+    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
     @JoinColumn(name = "user_id")
     private User user;
     private boolean loggedOut;

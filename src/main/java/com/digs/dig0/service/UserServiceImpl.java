@@ -32,11 +32,12 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
+
     @Autowired
     public UserServiceImpl(UserRepository userRepository, TokenRepository tokenRepository) {
-        this.tokenService = new TokenServiceImpl(tokenRepository, userRepository);
         this.passwordEncoder = new BCryptPasswordEncoder();
         this.userRepository = userRepository;
+        this.tokenService = new TokenServiceImpl(this.userRepository, tokenRepository);
     }
 
     /**
@@ -77,6 +78,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<User> save(User user) {
         return Optional.of(userRepository.save(user));
+    }
+
+    @Override
+    public User findByName(String name) {
+        return userRepository.findByName(name);
     }
 
     @Override

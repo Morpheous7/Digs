@@ -1,9 +1,8 @@
 package com.digs.dig0.model;
 
 import jakarta.persistence.*;
+import jakarta.transaction.Transactional;
 import lombok.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,7 +18,7 @@ import java.util.stream.Collectors;
  */
 
 @Builder
-@Entity
+@Entity(name = "User")
 @Table(name = "users",schema = "world")
 @Getter
 @Setter
@@ -37,9 +36,10 @@ public class User extends BaseEntity implements UserDetails {
     @JoinTable( name = "user_role",    joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id") )
     private Collection<Role> authority = new HashSet<>();
 
-   @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinTable( name = "user_events",    joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "event_id") )
-   private Set<Event> events = new HashSet<>();
+  /* @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinTable( name = "user_events",    joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "event_id") )*/
+  @OneToMany( mappedBy = "event_Organizer", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true  )
+    private Set<Event> events = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinTable(name = "user_friend", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "friend_id"))
@@ -54,7 +54,7 @@ public class User extends BaseEntity implements UserDetails {
      * @return the authorities, sorted by natural key (never <code>null</code>)
      */
     @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
+    public Collection<GrantedAuthority> getAuthorities() {
         return getAuthority().stream()
                 .map(Role::getAuthority)
                 .map(SimpleGrantedAuthority::new)

@@ -25,7 +25,6 @@ public class Friend extends BaseEntity {
     private String username;
     private String phn;
     private String name;
-    //private List<Event> events;
 
 
 }

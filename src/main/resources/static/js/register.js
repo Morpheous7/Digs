@@ -4,18 +4,18 @@ import {RegisDTO} from "./profiles";
 window.document.getElementById(`formAction`).addEventListener(`submit`, async (e) => {
     e.preventDefault();
     RegisDTO = new FormData(`formAction`);
-    await fetch("/aut/registers", {
+    await fetch("/register/registers", {
         method: 'POST', // or 'PUT'
         headers: {
             Accept: 'application/json',
             'Content-Type': `application/x-www-form-urlencoded`
         },
-        redirect: '/aut/registers',
+        redirect: '/register/registers',
         body: JSON.stringify(RegisDTO),
     }).then(response => {
         if(response.status === 200) {
-            response.redirect("/user", response.status);
-            window.document.location.href= "/user";
+            response.redirect("/home", response.status);
+            window.document.location.href= "/home";
         }
     }).then(RegisDTO => RegisDTO.header).catch(error => {
         console.error('Error:', error);
